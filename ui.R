@@ -1,7 +1,11 @@
 library(shinydashboard)
 
 ui <- dashboardPage(
-    dashboardHeader(),
+    dashboardHeader(title = "Toggl Dashboard"),
     dashboardSidebar(),
-    dashboardBody()
+    dashboardBody(
+        fluidRow(
+            box(plotOutput("plotByProject", height = 300))
+        )
+    )
 )
