@@ -1,6 +1,6 @@
 library(shinydashboard)
 
-dashboardPage(
+ui <- dashboardPage(
     dashboardHeader(),
     dashboardSidebar(),
     dashboardBody()
