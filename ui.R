@@ -14,9 +14,10 @@ body <- dashboardBody(
         tabItem(tabName = "dashboard",
                 fluidRow(
                     box(title = "Time by project", 
-                    status = "primary", 
-                    solidHeader = TRUE,
-                    plotOutput("plotByProject", height = 300))
+                        status = "primary", 
+                        solidHeader = TRUE,
+                        plotOutput("plotByProject", height = 300)),
+                    valueBoxOutput("projectsBox")
                 )
         ),
         

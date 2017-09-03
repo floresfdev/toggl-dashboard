@@ -53,4 +53,9 @@ server <- function(input, output) {
                 theme_minimal()
         })
     
+    output$projectsBox <-
+        renderValueBox({
+            valueBox()
+        })
+    
 }
