@@ -71,4 +71,4 @@ time_entries %>%
          y = "Hours") +
     coord_flip() +
     guides(fill = FALSE) +
-    theme_bw()
+    theme_minimal()
