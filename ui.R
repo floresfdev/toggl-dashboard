@@ -5,6 +5,9 @@ header <- dashboardHeader(title = "Toggl Dashboard")
 sidebar <- dashboardSidebar(
     sidebarMenu(
         menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+        
+        menuItem("By project", tabName = "byProject", icon = icon("tasks")),
+        
         menuItem("Other", tabName = "other", icon = icon("cog"))
     )
 )
@@ -12,12 +15,22 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(
     tabItems(
         tabItem(tabName = "dashboard",
+                h2("Main dashboard")
+        ),
+        
+        tabItem(tabName = "byProject",
                 fluidRow(
                     box(title = "Time by project", 
+                        width = 8,
                         status = "primary", 
                         solidHeader = TRUE,
                         plotOutput("plotByProject", height = 300)),
-                    valueBoxOutput("projectsBox")
+                    
+                    valueBoxOutput("clientsBox"),
+                    
+                    valueBoxOutput("projectsBox"),
+                    
+                    valueBoxOutput("hoursBox")
                 )
         ),
         
