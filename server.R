@@ -90,7 +90,8 @@ server <- function(input, output) {
                                    0,
                                    (n + abs(open_event)) / 2)) %>% 
         select(value_hour, entries) %>% 
-        mutate(day_string = wday(value_hour, label = TRUE, abbr = FALSE),
+        mutate(day_string = 
+                   lubridate::wday(value_hour, label = TRUE, abbr = FALSE),
                hour = hour(value_hour))
         
 
@@ -153,41 +154,97 @@ server <- function(input, output) {
     # Output - Time tracking patterns; Plot
     output$plotPatterns <-
         renderPlot({
+            ## Continue only after all dependent controls are created
+            if (is.null(input$checkboxSmootherInput) |
+                is.null(input$selectDayTypeInput) |
+                is.null(input$selectStatInput)) {
+                return(NULL)
+            }
+            
             ## TODO: Filter/show by:
             ## - Stat: Sum, median, mean (or altogether?)
             ## - Days: All, weekdays, weekend (or altogether with diff lines?)
-            by_time %>% 
+            
+            if (input$selectDayTypeInput == "Weekdays") {
+                filter_days <- 2:6
+            } else if (input$selectDayTypeInput == "Weekend") {
+                filter_days <- c(1, 7)
+            } else {
+                filter_days <- 1:7
+            }
+            
+            by_time_summary <-
+                by_time %>% 
+                filter(as.numeric(day_string) %in% filter_days) %>% 
                 group_by(hour) %>% 
                 summarize(sum_entries = sum(entries), 
                           mean_entries = mean(entries),
-                          median_entries = median(entries)) %>% 
-                ggplot(aes(x = hour, y = sum_entries)) +
-                geom_line(size = 1) +
-                labs(x = "hour", y = "Entries") +
-                scale_x_continuous(breaks = 0:24) + 
+                          median_entries = median(entries))
+            
+            plot_patterns <-
+                ggplot(by_time_summary, 
+                       aes_string(x = "hour", y = input$selectStatInput))
+
+            plot_patterns <- 
+                plot_patterns +
+                geom_line() #size = 1
+            
+            if (input$checkboxSmootherInput) {
+                plot_patterns <-
+                    plot_patterns + 
+                    geom_smooth(se = FALSE)
+                # stat_smooth(aes(y = sum_entries, x = hour), 
+                #             formula = y ~ s(x, k = 24), 
+                #             method = "gam", 
+                #             se = FALSE) +
+            }
+                
+            plot_patterns <-
+                plot_patterns +
+                labs(x = "Hour of the day", y = "Active entries") +
+                scale_x_continuous(breaks = 0:23) + 
                 theme_minimal() #+
                 #theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
                 #scale_x_date(date_breaks = "1 hour", date_labels = "%d/%m/%Y - %H:%M")
+            
+            print(plot_patterns)
         })
 
     
     # ---
-    # Output - Time tracking patterns; Stats 1
-    output$patternStats1 <-
+    # Output - Time tracking patterns: 
+    # Input for Day type selector (all, weekdays, weekends)
+    output$selectDayType <-
         renderUI({
-            p(class = "text-muted",
-              "First line of stats")
+            selectInput("selectDayTypeInput",
+                        "Type of days:", 
+                        choices = c("All", "Weekdays", "Weekend"))
         })
 
     
     # ---
-    # Output - Time tracking patterns; Stats 2
-    output$patternStats2 <-
+    # Output - Time tracking patterns: 
+    # Input for Stat selector (number of entries, median, mean)
+    output$selectStat <-
         renderUI({
-            p(class = "text-muted",
-              "Second line of stats")
+            # p(class = "text-muted",
+            #   "Second line of stats")
+            selectInput("selectStatInput",
+                        "Measure:", 
+                        choices = c("# of entries" = "sum_entries", 
+                                    "Median # of entries" = "median_entries", 
+                                    "Mean # of entries" = "mean_entries"))
         })
     
     
+    # ---
+    # Output - Time tracking patterns: 
+    # Input for smoother checkbox
+    output$checkboxSmoother <-
+        renderUI({
+            checkboxInput("checkboxSmootherInput",
+                          "Add smoother", 
+                          value = FALSE)
+        })
     
 }
