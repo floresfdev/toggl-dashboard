@@ -4,6 +4,7 @@ library(data.table)
 library(tidyverse)
 library(lubridate)
 library(forcats)
+library(padr)
 
 server <- function(input, output) {
     # ---
@@ -41,7 +42,9 @@ server <- function(input, output) {
                        tolower %>% 
                        trimws %>% 
                        gsub(" ", "_", .)) %>% 
-        mutate(start = ymd_hms(paste(start_date, start_time)),
+        mutate(client_label = ifelse(is.na(client), "(without client)", client),
+               client_project = paste0(client_label, " / ", project),
+               start = ymd_hms(paste(start_date, start_time)),
                end = ymd_hms(paste(end_date, end_time)),
                duration = hms(duration),
                duration_secs = as.numeric(duration))
@@ -51,11 +54,6 @@ server <- function(input, output) {
     # Filter data by client and project
     by_project <-
         time_entries %>%
-        mutate(client_project = 
-                   paste0(
-                       ifelse(client == "", "Without client", client), 
-                       " / ", 
-                       project)) %>% 
         group_by(client_project) %>% 
         summarize(n = n(),
                   sum_duration_secs = sum(duration_secs),
@@ -67,7 +65,7 @@ server <- function(input, output) {
     # Filter data by client
     by_client <-
         time_entries %>%
-        group_by(client) %>% 
+        group_by(client, client_label) %>% 
         summarize(n = n(),
                   sum_duration_secs = sum(duration_secs),
                   sum_duration_mins = sum_duration_secs / 60,
@@ -75,7 +73,29 @@ server <- function(input, output) {
     
     
     # ---
-    # Output: Plot by project
+    # Entries by time
+    by_time <-
+        time_entries %>% 
+        select(description, start_date, start, end) %>% 
+        reshape2::melt(id.vars = c("description", "start_date")) %>% 
+        arrange(start_date, description, variable, value) %>% 
+        select(start_date, description, variable, value) %>% 
+        mutate(open_event = ifelse(variable == "start", 1, -1)) %>% 
+        thicken("hour") %>% 
+        pad(by = "value_hour") %>% 
+        group_by(value_hour) %>% 
+        summarize(open_event = sum(open_event),
+                  n = n(),
+                  entries = ifelse(is.na(open_event),
+                                   0,
+                                   (n + abs(open_event)) / 2)) %>% 
+        select(value_hour, entries) %>% 
+        mutate(day_string = wday(value_hour, label = TRUE, abbr = FALSE),
+               hour = hour(value_hour))
+        
+
+    # ---
+    # Output - By project: Plot by project
     output$plotByProject <-
         renderPlot({
             by_project %>% 
@@ -92,10 +112,14 @@ server <- function(input, output) {
         })
     
     # ---
-    # Output: # of clients
+    # Output - By project: # of clients
     output$clientsBox <-
         renderValueBox({
-            value_clients <- nrow(by_client)
+            value_clients <- 
+                by_client %>% 
+                filter(!is.na(client)) %>% 
+                nrow()
+
             valueBox(value_clients, 
                      ifelse(value_clients == 1, "Client", "Clients"), 
                      icon = icon("building"))
@@ -103,7 +127,7 @@ server <- function(input, output) {
     
     
     # ---
-    # Output: # of projects
+    # Output - By project: # of projects
     output$projectsBox <-
         renderValueBox({
             value_projects <- nrow(by_project)
@@ -114,7 +138,7 @@ server <- function(input, output) {
     
     
     # ---
-    # Output: # of tracked hours
+    # Output - By project: # of tracked hours
     output$hoursBox <-
         renderValueBox({
             valueBox(format_time(round(sum(by_project$sum_duration_hours), 
@@ -123,6 +147,47 @@ server <- function(input, output) {
                      "Hours tracked", 
                      icon = icon("clock-o"))
         })
+    
+    
+    # ---
+    # Output - Time tracking patterns; Plot
+    output$plotPatterns <-
+        renderPlot({
+            ## TODO: Filter/show by:
+            ## - Stat: Sum, median, mean (or altogether?)
+            ## - Days: All, weekdays, weekend (or altogether with diff lines?)
+            by_time %>% 
+                group_by(hour) %>% 
+                summarize(sum_entries = sum(entries), 
+                          mean_entries = mean(entries),
+                          median_entries = median(entries)) %>% 
+                ggplot(aes(x = hour, y = sum_entries)) +
+                geom_line(size = 1) +
+                labs(x = "hour", y = "Entries") +
+                scale_x_continuous(breaks = 0:24) + 
+                theme_minimal() #+
+                #theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+                #scale_x_date(date_breaks = "1 hour", date_labels = "%d/%m/%Y - %H:%M")
+        })
+
+    
+    # ---
+    # Output - Time tracking patterns; Stats 1
+    output$patternStats1 <-
+        renderUI({
+            p(class = "text-muted",
+              "First line of stats")
+        })
+
+    
+    # ---
+    # Output - Time tracking patterns; Stats 2
+    output$patternStats2 <-
+        renderUI({
+            p(class = "text-muted",
+              "Second line of stats")
+        })
+    
     
     
 }

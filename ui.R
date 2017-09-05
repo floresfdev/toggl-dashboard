@@ -4,9 +4,13 @@ header <- dashboardHeader(title = "Toggl Dashboard")
 
 sidebar <- dashboardSidebar(
     sidebarMenu(
+        id = "tabs",
+        
         menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
         
         menuItem("By project", tabName = "byProject", icon = icon("tasks")),
+        
+        menuItem("Patterns", tabName = "patterns", icon = icon("line-chart")),
         
         menuItem("Other", tabName = "other", icon = icon("cog"))
     )
@@ -32,6 +36,25 @@ body <- dashboardBody(
                     
                     valueBoxOutput("hoursBox")
                 )
+        ),
+        
+        tabItem(tabName = "patterns",
+                fluidRow(
+                    box(title = "Time tracking patterns",
+                        width = 8,
+                        status = "primary",
+                        solidHeader = TRUE,
+                        plotOutput("plotPatterns", height = 300)),
+                    
+                    box(title = "Statistics",
+                        width = 4,
+                        status = "primary",
+                        solidHeader = TRUE,
+                        uiOutput("patternStats1"),
+                        br(),
+                        uiOutput("patternStats2"))
+                )
+            
         ),
         
         tabItem(tabName = "other",
