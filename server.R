@@ -5,24 +5,18 @@ library(tidyverse)
 library(lubridate)
 library(forcats)
 library(padr)
+library(DT)
+
+# ---
+# Helper functions and resources
+source("helpers.R")
+
 
 server <- function(input, output) {
-    # ---
-    # Helper functions
-    
-    ## Takes a numeric value and return as a formatted time
-    format_time <- function(value, time_unit = "hours") {
-        if (time_unit == "hours") {
-            value_whole <- floor(value)
-            value_decimal <- floor((value - value_whole) * 100)
-            value_formatted <- 
-                paste0(value_whole, ":", round(value_decimal * 60 / 100))
-        }
-        
-        value_formatted
-    }
-    
-    
+    # ========================================
+    # General
+    # ========================================
+
     # ---
     # Settings
     file_name <- "./data/Toggl_time_entries_2017-08-01_to_2017-08-31.csv"
@@ -30,13 +24,13 @@ server <- function(input, output) {
     
     # ---
     # Load data
-    time_entries <- fread(file_name, encoding = "UTF-8")
+    time_entries_raw <- fread(file_name, encoding = "UTF-8")
     
     
     # ---
     # Preprocess
     time_entries <-
-        time_entries %>% 
+        time_entries_raw %>% 
         rename_all(. %>% 
                        gsub("[(][)]", "", .) %>% 
                        tolower %>% 
@@ -393,5 +387,23 @@ server <- function(input, output) {
                              "count",
                              "density"))
         })
+    
+    
+    
+    # ========================================
+    # Tab: Raw data
+    # ========================================
+    
+    # ---
+    # Output - Raw data table: 
+    output$rawDataTable <-
+        DT::renderDataTable({
+            DT::datatable(time_entries_raw,
+                          style = "bootstrap",
+                          class = "table-bordered table-condensed",
+                          selection = "none",
+                          options = list(scrollX = TRUE))
+        })
+
     
 }

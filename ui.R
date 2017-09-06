@@ -23,7 +23,7 @@ sidebar <- dashboardSidebar(
                  startExpanded = TRUE
         ),
         
-        menuItem("Other", tabName = "other", icon = icon("cog"))
+        menuItem("Raw data", tabName = "rawData", icon = icon("file-text-o"))
     )
 )
 
@@ -91,8 +91,15 @@ body <- dashboardBody(
                 )
         ),
         
-        tabItem(tabName = "other",
-                h2("Other tab")
+        tabItem(tabName = "rawData",
+                fluidRow(
+                    box(title = "Raw data",
+                        width = 12,
+                        status = "primary",
+                        solidHeader = TRUE,
+                        dataTableOutput("rawDataTable"))
+                )
+                
         )
     )
 )
