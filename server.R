@@ -181,7 +181,7 @@ server <- function(input, output) {
     
     # ---
     # Output - Time tracking patterns; Plot
-    output$plotPatterns <-
+    output$plotPatternsByHour <-
         renderPlot({
             ## Continue only after all dependent controls are created
             if (is.null(input$checkboxSmootherInput) |
@@ -211,17 +211,17 @@ server <- function(input, output) {
                           min_entries = min(entries))
             
             ## Plot construction
-            plot_patterns <-
+            plot_patterns_by_hour <-
                 ggplot(by_hour_summary, 
                        aes_string(x = "hour", y = input$selectStatInput))
 
-            plot_patterns <- 
-                plot_patterns +
+            plot_patterns_by_hour <- 
+                plot_patterns_by_hour +
                 geom_line()
             
             if (input$checkboxSmootherInput) {
-                plot_patterns <-
-                    plot_patterns + 
+                plot_patterns_by_hour <-
+                    plot_patterns_by_hour + 
                     geom_smooth(method = "loess", se = FALSE)
                     # stat_smooth(aes_string(y = input$selectStatInput, 
                     #                        x = "hour"),
@@ -230,14 +230,14 @@ server <- function(input, output) {
                     #             se = FALSE)
             }
                 
-            plot_patterns <-
-                plot_patterns +
+            plot_patterns_by_hour <-
+                plot_patterns_by_hour +
                 labs(x = "Hour of the day", y = "Active entries") +
                 scale_x_continuous(breaks = 0:23) + 
                 theme_minimal()
             
             ## Print constructed plot
-            print(plot_patterns)
+            print(plot_patterns_by_hour)
         })
 
     
@@ -264,8 +264,7 @@ server <- function(input, output) {
                         choices = c("# of entries" = "sum_entries", 
                                     "Median # of entries" = "median_entries", 
                                     "Mean # of entries" = "mean_entries",
-                                    "Max # of entries" = "max_entries",
-                                    "Min # of entries" = "min_entries"))
+                                    "Max # of entries" = "max_entries"))
         })
     
     
@@ -278,5 +277,90 @@ server <- function(input, output) {
                           "Add smoother", 
                           value = FALSE)
         })
+    
+    
+    
+    # ---
+    # Output - Time tracking patterns by duration: 
+    # Plot
+    output$plotPatternsByDuration <-
+        renderPlot({
+            ## Continue only after all dependent controls are created
+            if (is.null(input$selectBinsInput) |
+                is.null(input$radioPlotTypeInput)) {
+                return(NULL)
+            }
+            
+            # if (input$checkboxDensityInput) {
+            #     hist_y_string <- "..density.."
+            # } else {
+            #     hist_y_string <- "..count.."
+            # }
+
+            plot_patterns_by_duration <-
+                ggplot(time_entries, 
+                       aes_string(x = "duration_secs / (60 * 60)",
+                                  #y = hist_y_string)) +
+                                  y = paste0("..",
+                                             input$radioPlotTypeInput,
+                                             ".."))) +
+                geom_histogram(
+                    binwidth = as.numeric(input$selectBinsInput) / (60 * 60),
+                    fill = "dodgerblue4",
+                    #fill = "#F8766D",
+                    alpha = 0.5)
+            
+            if (input$radioPlotTypeInput == "density") {
+                plot_patterns_by_duration <-
+                    plot_patterns_by_duration +
+                    geom_density(fill = "red4", 
+                                 #fill = "#F8766D", 
+                                 alpha = 0.5)
+            }
+            
+            plot_patterns_by_duration <-
+                plot_patterns_by_duration +
+                labs(x = "Duration (in hours)", 
+                     y = paste(input$radioPlotTypeInput, "of time entries")) +
+                theme_minimal()
+                
+            print(plot_patterns_by_duration)
+        })
+    
+    
+    # ---
+    # Output - Time tracking patterns by duration: 
+    # Input for bins selector
+    output$selectBins <-
+        renderUI({
+            # p(class = "text-muted",
+            #   "Second line of stats")
+            selectInput("selectBinsInput",
+                        "Bins:", 
+                        choices = c("1 hour" = "3600", 
+                                    "30 mins" = "1800", 
+                                    "15 mins" = "900",
+                                    "10 mins" = "600",
+                                    "5 mins" = "120",
+                                    "1 min" = "60"))
+        })
+    
+    
+    # ---
+    # Output - Time tracking patterns by duration: 
+    # Input for plot type
+    output$radioPlotType <-
+        renderUI({
+            radioButtons("radioPlotTypeInput",
+                         "Type:", 
+                         choiceNames = list(
+                             "Count",
+                             "Density"),
+                         choiceValues = list(
+                             "count",
+                             "density")
+            )
+        })
+    
     
 }

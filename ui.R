@@ -10,7 +10,18 @@ sidebar <- dashboardSidebar(
         
         menuItem("By project", tabName = "byProject", icon = icon("tasks")),
         
-        menuItem("Patterns", tabName = "patterns", icon = icon("line-chart")),
+        menuItem("Patterns", 
+
+                 menuSubItem("By hour", 
+                             tabName = "patternsByHour", 
+                             icon = icon("line-chart")),
+                 
+                 menuSubItem("By duration", 
+                             tabName = "patternsByDuration", 
+                             icon = icon("bar-chart")),
+                 
+                 startExpanded = TRUE
+        ),
         
         menuItem("Other", tabName = "other", icon = icon("cog"))
     )
@@ -44,25 +55,40 @@ body <- dashboardBody(
                 )
         ),
         
-        tabItem(tabName = "patterns",
+        tabItem(tabName = "patternsByHour",
                 fluidRow(
-                    box(title = "Time tracking patterns",
+                    box(title = "Time tracking patterns: By hour",
                         width = 9,
                         status = "primary",
                         solidHeader = TRUE,
-                        plotOutput("plotPatterns", height = 500)),
+                        plotOutput("plotPatternsByHour", height = 500)),
                     
-                    box(title = "Settings",
+                    box(title = "Explore",
                         width = 3,
                         status = "primary",
                         solidHeader = TRUE,
                         uiOutput("selectDayType"),
-                        #br(),
                         uiOutput("selectStat"),
-                        #br(),
                         uiOutput("checkboxSmoother"))
                 )
             
+        ),
+        
+        tabItem(tabName = "patternsByDuration",
+                fluidRow(
+                    box(title = "Time tracking patterns: By duration",
+                        width = 9,
+                        status = "primary",
+                        solidHeader = TRUE,
+                        plotOutput("plotPatternsByDuration", height = 500)),
+                    
+                    box(title = "Explore",
+                        width = 3,
+                        status = "primary",
+                        solidHeader = TRUE,
+                        uiOutput("radioPlotType"),
+                        uiOutput("selectBins"))
+                )
         ),
         
         tabItem(tabName = "other",
