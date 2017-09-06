@@ -52,7 +52,7 @@ body <- dashboardBody(
                         solidHeader = TRUE,
                         plotOutput("plotPatterns", height = 500)),
                     
-                    box(title = "Statistics",
+                    box(title = "Settings",
                         width = 3,
                         status = "primary",
                         solidHeader = TRUE,

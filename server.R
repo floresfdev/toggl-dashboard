@@ -42,8 +42,9 @@ server <- function(input, output) {
                        tolower %>% 
                        trimws %>% 
                        gsub(" ", "_", .)) %>% 
-        mutate(client_label = ifelse(is.na(client), "(without client)", client),
-               client_project = paste0(client_label, " / ", project),
+        mutate(client_label = ifelse(is.na(client), "(no client)", client),
+               project_label = ifelse(is.na(project), "(no project)", project),
+               client_project = paste(client_label, "/", project_label),
                start = ymd_hms(paste(start_date, start_time)),
                end = ymd_hms(paste(end_date, end_time)),
                duration = hms(duration),
@@ -66,10 +67,7 @@ server <- function(input, output) {
     by_client <-
         time_entries %>%
         group_by(client, client_label) %>% 
-        summarize(n = n(),
-                  sum_duration_secs = sum(duration_secs),
-                  sum_duration_mins = sum_duration_secs / 60,
-                  sum_duration_hours = sum_duration_mins / 60)
+        tally()
     
     # ---
     # Filter data by client
@@ -80,8 +78,8 @@ server <- function(input, output) {
     
     
     # ---
-    # Entries by time
-    by_time <-
+    # Entries by hour
+    by_hour <-
         time_entries %>% 
         select(description, start_date, start, end) %>% 
         reshape2::melt(id.vars = c("description", "start_date")) %>% 
@@ -202,17 +200,19 @@ server <- function(input, output) {
             }
             
             ## Create summary table by hour
-            by_time_summary <-
-                by_time %>% 
+            by_hour_summary <-
+                by_hour %>% 
                 filter(as.numeric(day_string) %in% filter_days) %>% 
                 group_by(hour) %>% 
                 summarize(sum_entries = sum(entries), 
                           mean_entries = mean(entries),
-                          median_entries = median(entries))
+                          median_entries = median(entries),
+                          max_entries = max(entries),
+                          min_entries = min(entries))
             
             ## Plot construction
             plot_patterns <-
-                ggplot(by_time_summary, 
+                ggplot(by_hour_summary, 
                        aes_string(x = "hour", y = input$selectStatInput))
 
             plot_patterns <- 
@@ -263,7 +263,9 @@ server <- function(input, output) {
                         "Measure:", 
                         choices = c("# of entries" = "sum_entries", 
                                     "Median # of entries" = "median_entries", 
-                                    "Mean # of entries" = "mean_entries"))
+                                    "Mean # of entries" = "mean_entries",
+                                    "Max # of entries" = "max_entries",
+                                    "Min # of entries" = "min_entries"))
         })
     
     
