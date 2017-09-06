@@ -213,16 +213,22 @@ server <- function(input, output) {
             ## Plot construction
             plot_patterns_by_hour <-
                 ggplot(by_hour_summary, 
-                       aes_string(x = "hour", y = input$selectStatInput))
+                       aes_string(x = "hour", 
+                                  y = input$selectStatInput))
 
             plot_patterns_by_hour <- 
                 plot_patterns_by_hour +
-                geom_line()
+                geom_line(size = 0.75,
+                          colour = "dodgerblue4",
+                          alpha = 0.5)
             
             if (input$checkboxSmootherInput) {
                 plot_patterns_by_hour <-
                     plot_patterns_by_hour + 
-                    geom_smooth(method = "loess", se = FALSE)
+                    geom_smooth(method = "loess", 
+                                se = FALSE,
+                                colour = "red4",
+                                alpha = 0.5)
                     # stat_smooth(aes_string(y = input$selectStatInput, 
                     #                        x = "hour"),
                     #             formula = y ~ s(x, k = 6),
