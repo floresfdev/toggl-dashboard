@@ -24,15 +24,21 @@ body <- dashboardBody(
         
         tabItem(tabName = "byProject",
                 fluidRow(
+                    tags$head(tags$style(HTML(".small-box {height: 95px}"))),
+
                     box(title = "Time by project", 
                         width = 9,
                         status = "primary", 
                         solidHeader = TRUE,
-                        plotOutput("plotByProject", height = 300)),
+                        plotOutput("plotByProject", height = 500)),
                     
                     valueBoxOutput("clientsBox", width = 3),
                     
                     valueBoxOutput("projectsBox", width = 3),
+                    
+                    valueBoxOutput("entriesBox", width = 3),
+                    
+                    valueBoxOutput("uniqueEntriesBox", width = 3),
                     
                     valueBoxOutput("hoursBox", width = 3)
                 )
@@ -44,7 +50,7 @@ body <- dashboardBody(
                         width = 9,
                         status = "primary",
                         solidHeader = TRUE,
-                        plotOutput("plotPatterns", height = 300)),
+                        plotOutput("plotPatterns", height = 500)),
                     
                     box(title = "Statistics",
                         width = 3,

@@ -71,6 +71,13 @@ server <- function(input, output) {
                   sum_duration_mins = sum_duration_secs / 60,
                   sum_duration_hours = sum_duration_mins / 60)
     
+    # ---
+    # Filter data by client
+    by_entries <-
+        time_entries %>% 
+        group_by(client_project, description) %>% 
+        tally()
+    
     
     # ---
     # Entries by time
@@ -139,6 +146,30 @@ server <- function(input, output) {
     
     
     # ---
+    # Output - By project: # of entries
+    output$entriesBox <-
+        renderValueBox({
+            value_entries <- sum(by_entries$n)
+            valueBox(value_entries, 
+                     ifelse(value_entries == 1, "Entry", "Entries"), 
+                     icon = icon("list"))
+        })
+    
+    
+    # ---
+    # Output - By project: # of unique entries
+    output$uniqueEntriesBox <-
+        renderValueBox({
+            value_unique_entries <- nrow(by_entries)
+            valueBox(value_unique_entries, 
+                     ifelse(value_unique_entries == 1, 
+                            "Unique entry", 
+                            "Unique entries"), 
+                     icon = icon("list-ol"))
+        })
+    
+    
+    # ---
     # Output - By project: # of tracked hours
     output$hoursBox <-
         renderValueBox({
@@ -161,10 +192,7 @@ server <- function(input, output) {
                 return(NULL)
             }
             
-            ## TODO: Filter/show by:
-            ## - Stat: Sum, median, mean (or altogether?)
-            ## - Days: All, weekdays, weekend (or altogether with diff lines?)
-            
+            ## Setting up what days will be filtered
             if (input$selectDayTypeInput == "Weekdays") {
                 filter_days <- 2:6
             } else if (input$selectDayTypeInput == "Weekend") {
@@ -173,6 +201,7 @@ server <- function(input, output) {
                 filter_days <- 1:7
             }
             
+            ## Create summary table by hour
             by_time_summary <-
                 by_time %>% 
                 filter(as.numeric(day_string) %in% filter_days) %>% 
@@ -181,32 +210,33 @@ server <- function(input, output) {
                           mean_entries = mean(entries),
                           median_entries = median(entries))
             
+            ## Plot construction
             plot_patterns <-
                 ggplot(by_time_summary, 
                        aes_string(x = "hour", y = input$selectStatInput))
 
             plot_patterns <- 
                 plot_patterns +
-                geom_line() #size = 1
+                geom_line()
             
             if (input$checkboxSmootherInput) {
                 plot_patterns <-
                     plot_patterns + 
-                    geom_smooth(se = FALSE)
-                # stat_smooth(aes(y = sum_entries, x = hour), 
-                #             formula = y ~ s(x, k = 24), 
-                #             method = "gam", 
-                #             se = FALSE) +
+                    geom_smooth(method = "loess", se = FALSE)
+                    # stat_smooth(aes_string(y = input$selectStatInput, 
+                    #                        x = "hour"),
+                    #             formula = y ~ s(x, k = 6),
+                    #             method = "gam",
+                    #             se = FALSE)
             }
                 
             plot_patterns <-
                 plot_patterns +
                 labs(x = "Hour of the day", y = "Active entries") +
                 scale_x_continuous(breaks = 0:23) + 
-                theme_minimal() #+
-                #theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-                #scale_x_date(date_breaks = "1 hour", date_labels = "%d/%m/%Y - %H:%M")
+                theme_minimal()
             
+            ## Print constructed plot
             print(plot_patterns)
         })
 
