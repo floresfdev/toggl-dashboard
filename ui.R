@@ -6,8 +6,6 @@ sidebar <- dashboardSidebar(
     sidebarMenu(
         id = "tabs",
         
-        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-        
         menuItem("By project", tabName = "byProject", icon = icon("tasks")),
         
         menuItem("Patterns", 
@@ -29,10 +27,6 @@ sidebar <- dashboardSidebar(
 
 body <- dashboardBody(
     tabItems(
-        tabItem(tabName = "dashboard",
-                h2("Main dashboard")
-        ),
-        
         tabItem(tabName = "byProject",
                 fluidRow(
                     tags$head(tags$style(HTML(".small-box {height: 95px}"))),
