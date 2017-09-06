@@ -68,7 +68,8 @@ server <- function(input, output) {
         time_entries %>%
         group_by(client, client_label) %>% 
         tally()
-    
+
+        
     # ---
     # Filter data by client
     by_entries <-
@@ -100,8 +101,14 @@ server <- function(input, output) {
                hour = hour(value_hour))
         
 
+    
+    # ========================================
+    # Tab: By project
+    # ========================================
+    
     # ---
-    # Output - By project: Plot by project
+    # Output - By project: 
+    # Plot by project
     output$plotByProject <-
         renderPlot({
             by_project %>% 
@@ -117,8 +124,10 @@ server <- function(input, output) {
                 theme_minimal()
         })
     
+    
     # ---
-    # Output - By project: # of clients
+    # Output - By project: 
+    # Number of clients
     output$clientsBox <-
         renderValueBox({
             value_clients <- 
@@ -133,10 +142,12 @@ server <- function(input, output) {
     
     
     # ---
-    # Output - By project: # of projects
+    # Output - By project: 
+    # Number of projects
     output$projectsBox <-
         renderValueBox({
             value_projects <- nrow(by_project)
+            
             valueBox(value_projects, 
                      ifelse(value_projects == 1, "Project", "Projects"), 
                      icon = icon("tasks"))
@@ -144,10 +155,12 @@ server <- function(input, output) {
     
     
     # ---
-    # Output - By project: # of entries
+    # Output - By project: 
+    # Number of entries
     output$entriesBox <-
         renderValueBox({
             value_entries <- sum(by_entries$n)
+            
             valueBox(value_entries, 
                      ifelse(value_entries == 1, "Entry", "Entries"), 
                      icon = icon("list"))
@@ -155,10 +168,12 @@ server <- function(input, output) {
     
     
     # ---
-    # Output - By project: # of unique entries
+    # Output - By project: 
+    # Number of unique entries
     output$uniqueEntriesBox <-
         renderValueBox({
             value_unique_entries <- nrow(by_entries)
+            
             valueBox(value_unique_entries, 
                      ifelse(value_unique_entries == 1, 
                             "Unique entry", 
@@ -168,19 +183,29 @@ server <- function(input, output) {
     
     
     # ---
-    # Output - By project: # of tracked hours
+    # Output - By project:
+    # Number of tracked hours
     output$hoursBox <-
         renderValueBox({
-            valueBox(format_time(round(sum(by_project$sum_duration_hours), 
-                                       digits = 2), 
-                                 "hours"), 
+            value_hours <- 
+                format_time(round(sum(by_project$sum_duration_hours), 
+                                  digits = 2), 
+                            "hours")
+            
+            valueBox(value_hours, 
                      "Hours tracked", 
                      icon = icon("clock-o"))
         })
     
     
+    
+    # ========================================
+    # Tab: Patterns - By hour
+    # ========================================
+    
     # ---
-    # Output - Time tracking patterns; Plot
+    # Output - Time tracking patterns by hour: 
+    # Plot
     output$plotPatternsByHour <-
         renderPlot({
             ## Continue only after all dependent controls are created
@@ -191,6 +216,7 @@ server <- function(input, output) {
             }
             
             ## Setting up what days will be filtered
+            ## Sunday: 1, Monday: 2, ..., Saturday: 7
             if (input$selectDayTypeInput == "Weekdays") {
                 filter_days <- 2:6
             } else if (input$selectDayTypeInput == "Weekend") {
@@ -210,18 +236,19 @@ server <- function(input, output) {
                           max_entries = max(entries),
                           min_entries = min(entries))
             
+            
             ## Plot construction
+            
+            ### Y-axis depends on the selected stat
             plot_patterns_by_hour <-
                 ggplot(by_hour_summary, 
                        aes_string(x = "hour", 
-                                  y = input$selectStatInput))
-
-            plot_patterns_by_hour <- 
-                plot_patterns_by_hour +
+                                  y = input$selectStatInput)) +
                 geom_line(size = 0.75,
                           colour = "dodgerblue4",
                           alpha = 0.5)
             
+            ### Condition to add a LOESS smoother
             if (input$checkboxSmootherInput) {
                 plot_patterns_by_hour <-
                     plot_patterns_by_hour + 
@@ -229,18 +256,15 @@ server <- function(input, output) {
                                 se = FALSE,
                                 colour = "red4",
                                 alpha = 0.5)
-                    # stat_smooth(aes_string(y = input$selectStatInput, 
-                    #                        x = "hour"),
-                    #             formula = y ~ s(x, k = 6),
-                    #             method = "gam",
-                    #             se = FALSE)
             }
-                
+            
+            ### General settings
             plot_patterns_by_hour <-
                 plot_patterns_by_hour +
                 labs(x = "Hour of the day", y = "Active entries") +
                 scale_x_continuous(breaks = 0:23) + 
                 theme_minimal()
+            
             
             ## Print constructed plot
             print(plot_patterns_by_hour)
@@ -248,23 +272,23 @@ server <- function(input, output) {
 
     
     # ---
-    # Output - Time tracking patterns: 
+    # Output - Time tracking patterns by hour: 
     # Input for Day type selector (all, weekdays, weekends)
     output$selectDayType <-
         renderUI({
             selectInput("selectDayTypeInput",
                         "Type of days:", 
-                        choices = c("All", "Weekdays", "Weekend"))
+                        choices = c("All", 
+                                    "Weekdays", 
+                                    "Weekend"))
         })
 
     
     # ---
-    # Output - Time tracking patterns: 
+    # Output - Time tracking patterns by hour: 
     # Input for Stat selector (number of entries, median, mean)
     output$selectStat <-
         renderUI({
-            # p(class = "text-muted",
-            #   "Second line of stats")
             selectInput("selectStatInput",
                         "Measure:", 
                         choices = c("# of entries" = "sum_entries", 
@@ -275,8 +299,8 @@ server <- function(input, output) {
     
     
     # ---
-    # Output - Time tracking patterns: 
-    # Input for smoother checkbox
+    # Output - Time tracking patterns by hour: 
+    # Input for smoother checkbox (unchecked by default)
     output$checkboxSmoother <-
         renderUI({
             checkboxInput("checkboxSmootherInput",
@@ -285,6 +309,10 @@ server <- function(input, output) {
         })
     
     
+    
+    # ========================================
+    # Tab: Patterns - By duration
+    # ========================================
     
     # ---
     # Output - Time tracking patterns by duration: 
@@ -297,39 +325,39 @@ server <- function(input, output) {
                 return(NULL)
             }
             
-            # if (input$checkboxDensityInput) {
-            #     hist_y_string <- "..density.."
-            # } else {
-            #     hist_y_string <- "..count.."
-            # }
+            
+            ## Plot construction
 
+            ### Y-axis depends on the selected plot type
+            ### Convert X-values in seconds to hours
             plot_patterns_by_duration <-
                 ggplot(time_entries, 
                        aes_string(x = "duration_secs / (60 * 60)",
-                                  #y = hist_y_string)) +
                                   y = paste0("..",
                                              input$radioPlotTypeInput,
                                              ".."))) +
                 geom_histogram(
                     binwidth = as.numeric(input$selectBinsInput) / (60 * 60),
                     fill = "dodgerblue4",
-                    #fill = "#F8766D",
                     alpha = 0.5)
             
+            ### Condition to add a smoother by kernel density estimate
             if (input$radioPlotTypeInput == "density") {
                 plot_patterns_by_duration <-
                     plot_patterns_by_duration +
                     geom_density(fill = "red4", 
-                                 #fill = "#F8766D", 
                                  alpha = 0.5)
             }
             
+            ### General settings
             plot_patterns_by_duration <-
                 plot_patterns_by_duration +
                 labs(x = "Duration (in hours)", 
                      y = paste(input$radioPlotTypeInput, "of time entries")) +
                 theme_minimal()
-                
+            
+            
+            ## Print constructed plot
             print(plot_patterns_by_duration)
         })
     
@@ -339,8 +367,7 @@ server <- function(input, output) {
     # Input for bins selector
     output$selectBins <-
         renderUI({
-            # p(class = "text-muted",
-            #   "Second line of stats")
+            ## Values in seconds
             selectInput("selectBinsInput",
                         "Bins:", 
                         choices = c("1 hour" = "3600", 
@@ -364,9 +391,7 @@ server <- function(input, output) {
                              "Density"),
                          choiceValues = list(
                              "count",
-                             "density")
-            )
+                             "density"))
         })
-    
     
 }
