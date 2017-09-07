@@ -1,3 +1,6 @@
 *.RData
 *.Rhistory
 .Rproj.user
+/data/*.bak
+/data/Workspace*.csv
+helper01*.R
