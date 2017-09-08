@@ -80,6 +80,7 @@ server <- function(input, output) {
         reshape2::melt(id.vars = c("description", "start_date")) %>% 
         arrange(start_date, description, variable, value) %>% 
         select(start_date, description, variable, value) %>% 
+        ## TODO: Find a clearer way to track the event open/close
         mutate(open_event = ifelse(variable == "start", 1, -1)) %>% 
         thicken("hour") %>% 
         pad(by = "value_hour") %>% 
@@ -93,8 +94,8 @@ server <- function(input, output) {
         mutate(day_string = 
                    lubridate::wday(value_hour, label = TRUE, abbr = FALSE),
                hour = hour(value_hour))
-        
-
+    
+    
     
     # ========================================
     # Tab: By project
@@ -123,15 +124,26 @@ server <- function(input, output) {
     # Output - By project: 
     # Number of clients
     output$clientsBox <-
+        # renderInfoBox({
+        #     value_clients <-
+        #         by_client %>%
+        #         filter(!is.na(client)) %>%
+        #         nrow()
+        #     
+        #     infoBox(ifelse(value_clients == 1, "Client", "Clients"),
+        #             value_clients,
+        #             icon = icon("building"))
+        # })
         renderValueBox({
-            value_clients <- 
-                by_client %>% 
-                filter(!is.na(client)) %>% 
+            value_clients <-
+                by_client %>%
+                filter(!is.na(client)) %>%
                 nrow()
 
-            valueBox(value_clients, 
-                     ifelse(value_clients == 1, "Client", "Clients"), 
-                     icon = icon("building"))
+            valueBox(value_clients,
+                     ifelse(value_clients == 1, "Client", "Clients"),
+                     icon = icon("building"),
+                     color = "light-blue")
         })
     
     
@@ -144,7 +156,8 @@ server <- function(input, output) {
             
             valueBox(value_projects, 
                      ifelse(value_projects == 1, "Project", "Projects"), 
-                     icon = icon("tasks"))
+                     icon = icon("tasks"),
+                     color = "light-blue")
         })
     
     
@@ -157,7 +170,8 @@ server <- function(input, output) {
             
             valueBox(value_entries, 
                      ifelse(value_entries == 1, "Entry", "Entries"), 
-                     icon = icon("list"))
+                     icon = icon("list"),
+                     color = "light-blue")
         })
     
     
@@ -172,7 +186,8 @@ server <- function(input, output) {
                      ifelse(value_unique_entries == 1, 
                             "Unique entry", 
                             "Unique entries"), 
-                     icon = icon("list-ol"))
+                     icon = icon("list-ol"),
+                     color = "light-blue")
         })
     
     
@@ -188,11 +203,36 @@ server <- function(input, output) {
             
             valueBox(value_hours, 
                      "Hours tracked", 
-                     icon = icon("clock-o"))
+                     icon = icon("clock-o"),
+                     color = "light-blue")
         })
     
     
+    # ---
+    # Output - By project:
+    # Date range
+    output$dateRangeBox <-
+        renderValueBox({
+            date_range_from <- ymd(min(time_entries$start_date))
+            date_range_to <- ymd(max(time_entries$start_date))
+            format_template <- "Aug 1, 2017"
+            
+            # value_hours <- 
+            #     format_time(round(sum(by_project$sum_duration_hours), 
+            #                       digits = 2), 
+            #                 "hours")
+            
+            valueBox("",
+                     HTML(paste(
+                         "From", strong(stamp(format_template)(date_range_from)), 
+                         br(),
+                         "To", strong(stamp(format_template)(date_range_to)))), 
+                     icon = icon("clock-o"),
+                     color = "light-blue")
+        })
     
+    
+
     # ========================================
     # Tab: Patterns - By hour
     # ========================================
