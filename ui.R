@@ -1,4 +1,5 @@
 library(shinydashboard)
+library(markdown)
 
 header <- dashboardHeader(title = "Toggl Dashboard")
 
@@ -6,22 +7,30 @@ sidebar <- dashboardSidebar(
     sidebarMenu(
         id = "tabs",
         
-        menuItem("By project", tabName = "byProject", icon = icon("tasks")),
+        menuItem("Time by project", 
+                 tabName = "byProject", 
+                 icon = icon("tasks")),
         
-        menuItem("Patterns", 
+        menuItem("Time tracking patterns", 
 
-                 menuSubItem("By hour", 
+                 menuSubItem("Entries by hour", 
                              tabName = "patternsByHour", 
                              icon = icon("line-chart")),
                  
-                 menuSubItem("By duration", 
+                 menuSubItem("Entries by duration", 
                              tabName = "patternsByDuration", 
                              icon = icon("bar-chart")),
                  
                  startExpanded = TRUE
         ),
         
-        menuItem("Raw data", tabName = "rawData", icon = icon("file-text-o"))
+        menuItem("Raw data", 
+                 tabName = "rawData", 
+                 icon = icon("file-text-o")),
+        
+        menuItem("About",
+                 tabName = "about",
+                 icon = icon("info-circle"))
     )
 )
 
@@ -29,7 +38,7 @@ body <- dashboardBody(
     tabItems(
         tabItem(tabName = "byProject",
                 fluidRow(
-                    tags$head(tags$style(HTML(".small-box {height: 95px}"))),
+                    tags$head(tags$style(HTML(".small-box {height: 90px}"))),
                     
                     valueBoxOutput("dateRangeBox", width = 4),
                     
@@ -49,13 +58,13 @@ body <- dashboardBody(
                         width = 12,
                         status = "primary", 
                         solidHeader = TRUE,
-                        plotOutput("plotByProject", height = 300))
+                        plotOutput("plotByProject", height = 290))
                 )
         ),
         
         tabItem(tabName = "patternsByHour",
                 fluidRow(
-                    box(title = "Time tracking patterns: By hour",
+                    box(title = "Time tracking patterns: Entries by hour",
                         width = 9,
                         status = "primary",
                         solidHeader = TRUE,
@@ -74,7 +83,7 @@ body <- dashboardBody(
         
         tabItem(tabName = "patternsByDuration",
                 fluidRow(
-                    box(title = "Time tracking patterns: By duration",
+                    box(title = "Time tracking patterns: Entries by duration",
                         width = 9,
                         status = "primary",
                         solidHeader = TRUE,
@@ -98,7 +107,13 @@ body <- dashboardBody(
                         dataTableOutput("rawDataTable"))
                 )
                 
-        )
+        ),
+        
+        tabItem(tabName = "about",
+                fluidRow(
+                    column(width = 12,
+                           includeMarkdown("about.md"))
+                ))
     )
 )
 

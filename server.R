@@ -4,6 +4,8 @@ library(data.table)
 library(tidyverse)
 library(lubridate)
 library(forcats)
+library(reshape2)
+library(stringr)
 library(padr)
 library(DT)
 
@@ -18,7 +20,7 @@ server <- function(input, output) {
     # ========================================
 
     # ---
-    # Settings
+    # Name of the file exported from Toggl
     file_name <- "./data/Toggl_time_entries_2017-08-01_to_2017-08-31.csv"
     
     
@@ -28,7 +30,11 @@ server <- function(input, output) {
     
     
     # ---
-    # Preprocess
+    # Preprocess:
+    # - Fix column names
+    # - Create labels for clients and projects
+    # - Convert dates
+    # - Compute duration of time entries in seconds
     time_entries <-
         time_entries_raw %>% 
         rename_all(. %>% 
@@ -46,7 +52,7 @@ server <- function(input, output) {
     
     
     # ---
-    # Filter data by client and project
+    # Group data by client and project
     by_project <-
         time_entries %>%
         group_by(client_project) %>% 
@@ -57,7 +63,7 @@ server <- function(input, output) {
 
     
     # ---
-    # Filter data by client
+    # Group data by client
     by_client <-
         time_entries %>%
         group_by(client, client_label) %>% 
@@ -65,7 +71,7 @@ server <- function(input, output) {
 
         
     # ---
-    # Filter data by client
+    # Group data by entries
     by_entries <-
         time_entries %>% 
         group_by(client_project, description) %>% 
@@ -73,7 +79,11 @@ server <- function(input, output) {
     
     
     # ---
-    # Entries by hour
+    # Group entries by hour
+    # - Select a subset of columns
+    # - Keep track the open/close of events
+    # - Use thicken/pad to complete the dataset with each hour of the day
+    # - Compute day of the week and hour of the day
     by_hour <-
         time_entries %>% 
         select(description, start_date, start, end) %>% 
@@ -111,9 +121,9 @@ server <- function(input, output) {
                 geom_bar(aes(x = fct_reorder(client_project, sum_duration_hours),
                              y = sum_duration_hours,
                              fill = client_project),
+                         alpha = 0.75,
                          stat = "identity") +
-                labs(x = "Project",
-                     y = "Hours") +
+                labs(x = "", y = "Hours") +
                 coord_flip() +
                 guides(fill = FALSE) +
                 theme_minimal()
@@ -143,7 +153,7 @@ server <- function(input, output) {
             valueBox(value_clients,
                      ifelse(value_clients == 1, "Client", "Clients"),
                      icon = icon("building"),
-                     color = "light-blue")
+                     color = "teal")
         })
     
     
@@ -157,7 +167,7 @@ server <- function(input, output) {
             valueBox(value_projects, 
                      ifelse(value_projects == 1, "Project", "Projects"), 
                      icon = icon("tasks"),
-                     color = "light-blue")
+                     color = "teal")
         })
     
     
@@ -171,7 +181,7 @@ server <- function(input, output) {
             valueBox(value_entries, 
                      ifelse(value_entries == 1, "Entry", "Entries"), 
                      icon = icon("list"),
-                     color = "light-blue")
+                     color = "teal")
         })
     
     
@@ -187,7 +197,7 @@ server <- function(input, output) {
                             "Unique entry", 
                             "Unique entries"), 
                      icon = icon("list-ol"),
-                     color = "light-blue")
+                     color = "teal")
         })
     
     
@@ -204,7 +214,7 @@ server <- function(input, output) {
             valueBox(value_hours, 
                      "Hours tracked", 
                      icon = icon("clock-o"),
-                     color = "light-blue")
+                     color = "teal")
         })
     
     
@@ -215,7 +225,7 @@ server <- function(input, output) {
         renderValueBox({
             date_range_from <- ymd(min(time_entries$start_date))
             date_range_to <- ymd(max(time_entries$start_date))
-            format_template <- "Aug 1, 2017"
+            format_template <- "Aug 30, 2017"
             
             # value_hours <- 
             #     format_time(round(sum(by_project$sum_duration_hours), 
@@ -227,8 +237,8 @@ server <- function(input, output) {
                          "From", strong(stamp(format_template)(date_range_from)), 
                          br(),
                          "To", strong(stamp(format_template)(date_range_to)))), 
-                     icon = icon("clock-o"),
-                     color = "light-blue")
+                     icon = icon("calendar"),
+                     color = "teal")
         })
     
     
@@ -387,7 +397,8 @@ server <- function(input, output) {
             plot_patterns_by_duration <-
                 plot_patterns_by_duration +
                 labs(x = "Duration (in hours)", 
-                     y = paste(input$radioPlotTypeInput, "of time entries")) +
+                     y = paste(str_to_title(input$radioPlotTypeInput), 
+                               "of time entries")) +
                 theme_minimal()
             
             
