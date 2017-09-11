@@ -1,5 +1,4 @@
 library(shinydashboard)
-library(markdown)
 
 header <- dashboardHeader(title = "Toggl Dashboard")
 
@@ -112,7 +111,7 @@ body <- dashboardBody(
         tabItem(tabName = "about",
                 fluidRow(
                     column(width = 12,
-                           includeMarkdown("about.md"))
+                           shiny::includeHTML("./docs/about.html"))
                 ))
     )
 )
