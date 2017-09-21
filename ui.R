@@ -103,7 +103,7 @@ body <- dashboardBody(
                         width = 12,
                         status = "primary",
                         solidHeader = TRUE,
-                        dataTableOutput("rawDataTable"))
+                        DT::dataTableOutput("rawDataTable"))
                 )
                 
         ),
