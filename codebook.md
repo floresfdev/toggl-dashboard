@@ -27,5 +27,5 @@ The `.csv` file used in this application is exported from Toggl:
 - `End date`: End date of the time entry. Type: Character, format: `yyyy-mm-dd`.
 - `End time`: End time of the time entry. Type: Character, format: `hh:mm:ss`.
 - `Duration`: Duration of the time entry. Type: Character, format: `hh:mm:ss`.
-- `Tags`: Tag list of the time entry. Type: Character, format: List of strings, comma separated, between double quotation marks (e.g. `"Tag1, Tag2, Tag3"`).
+- `Tags`: Tag list of the time entry. Type: Character, field can be empty, format: List of strings, comma separated, between double quotation marks (e.g. `"Tag1, Tag2, Tag3"`).
 - `Amount ()`: *Empty (free plan). Depends on the `Billable` field*
