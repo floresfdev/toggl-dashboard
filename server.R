@@ -134,16 +134,6 @@ server <- function(input, output) {
     # Output - By project: 
     # Number of clients
     output$clientsBox <-
-        # renderInfoBox({
-        #     value_clients <-
-        #         by_client %>%
-        #         filter(!is.na(client)) %>%
-        #         nrow()
-        #     
-        #     infoBox(ifelse(value_clients == 1, "Client", "Clients"),
-        #             value_clients,
-        #             icon = icon("building"))
-        # })
         renderValueBox({
             value_clients <-
                 by_client %>%
@@ -226,11 +216,6 @@ server <- function(input, output) {
             date_range_from <- ymd(min(time_entries$start_date))
             date_range_to <- ymd(max(time_entries$start_date))
             format_template <- "Aug 30, 2017"
-            
-            # value_hours <- 
-            #     format_time(round(sum(by_project$sum_duration_hours), 
-            #                       digits = 2), 
-            #                 "hours")
             
             valueBox("",
                      HTML(paste(
